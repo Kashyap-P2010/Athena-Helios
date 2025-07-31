@@ -195,15 +195,15 @@ export default function Suggestions() {
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-green-600 mb-1">12</p>
+              <p className="text-2xl font-bold text-green-600 mb-1">0</p>
               <p className="text-sm text-gray-600">Suggestions completed</p>
             </div>
             <div className="bg-white rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-blue-600 mb-1">3</p>
+              <p className="text-2xl font-bold text-blue-600 mb-1">0</p>
               <p className="text-sm text-gray-600">Active challenges</p>
             </div>
             <div className="bg-white rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-purple-600 mb-1">850</p>
+              <p className="text-2xl font-bold text-purple-600 mb-1">0</p>
               <p className="text-sm text-gray-600">Points earned from improvements</p>
             </div>
           </div>
