@@ -35,7 +35,6 @@ function App() {
               <li className="nav-item">
                 <Link className="nav-link active" to="/">Home</Link>
               </li>
-              
 
               {loggedIn === false ?
                 <>

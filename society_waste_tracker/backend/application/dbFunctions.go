@@ -156,3 +156,5 @@ func (app *Application) GetMonthlyWastesApartment(w http.ResponseWriter, id int,
 
 	return wastePerMonthList, nil
 }
+
+func (app *Application) ApartmentMonthlyLeaderboardFunc(month string) ()
