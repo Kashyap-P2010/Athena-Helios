@@ -2,19 +2,51 @@ import { useEffect, useState } from "react"
 import { useOutletContext } from "react-router-dom"
 
 function ResidentDashboardPage() {
-    const {developmentBackendLink, productionBackendLink, setSuccessAlert, navigate} = useOutletContext();
+    const {developmentBackendLink, productionBackendLink, setSuccessAlert, setErrorAlert, navigate} = useOutletContext();
 
     const user = JSON.parse(sessionStorage.getItem("resident"))
 
     const [wasteData, setWasteData] = useState([]);
 
-    let currentDate = new Date();
-    let currentMonthName = currentDate.toLocaleString('default', {month: 'long' });
+    var currentDate = new Date();
+    var currentMonthName = currentDate.toLocaleString('default', {month: 'long' });
 
     const logWasteSubmit = (event) => {
         event.preventDefault()
 
+        var waste_amount_entered = Number(event.target.waste_amount_entered.value)
+        var month_entered = event.target.month_entered.value
 
+        console.log(waste_amount_entered)
+
+        const requestBody = {
+            waste_amount_entered: waste_amount_entered,
+            month_entered: month_entered,
+            resident_id: Number(user.id),
+            apartment_id: Number(user.apartment_id),
+        }
+
+        const requestOptions = {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(requestBody),
+        }
+
+        fetch(`${developmentBackendLink}/resident-log-waste`, requestOptions)
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.error) {
+                    console.log(data.error)
+                    setErrorAlert(data.error)
+                    return
+                }
+                if (data.success_message) {
+                    setSuccessAlert(data.success_message)
+                    window.location.reload()
+                }
+            })
     }
 
     useEffect(() => {
@@ -36,7 +68,7 @@ function ResidentDashboardPage() {
                 console.log(data)
                 setWasteData(data.waste_per_month)
             })
-    }, [wasteData, user])
+    }, [])
 
     return (
         <div>
@@ -68,8 +100,8 @@ function ResidentDashboardPage() {
                     <h3>Log Waste Generated</h3>
 
                     <form onSubmit={logWasteSubmit} method="post">
-                        <input type="number" name="waste_amount" id="waste_amount" placeholder="Amount of Waste(kg)" className="form-control" />
-                        <select class="form-select" aria-label="Default select example" style={{"marginTop": "1%"}}>
+                        <input type="number" name="waste_amount_entered" id="waste_amount_entered" placeholder="Amount of Waste(kg)" className="form-control" />
+                        <select name="month_entered" class="form-select" aria-label="Default select example" style={{"marginTop": "1%"}}>
                             <option selected value={currentMonthName}>{currentMonthName}</option>
                             <option value="January">January</option>
                             <option value="February">February</option>
@@ -84,6 +116,8 @@ function ResidentDashboardPage() {
                             <option value="November">November</option>
                             <option value="December">December</option>
                         </select>
+
+                        <button type="submit" className="btn btn-primary" style={{"marginTop": "1%"}}>Log Waste</button>
                     </form>
                 </div>
             </div>

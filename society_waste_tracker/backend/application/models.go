@@ -10,6 +10,13 @@ type Apartment struct {
 	UpdatedAt     time.Time `json:"updated_at"`
 }
 
+type ApartmentWastes struct {
+	ID          int    `json:"id"`
+	FlatNumber  string `json:"flat_number"`
+	WasteAmount int    `json:"waste_generated"`
+	Month       string `json:"month"`
+}
+
 type Resident struct {
 	ID          int       `json:"id"`
 	FlatNumber  string    `json:"flat_number"`
