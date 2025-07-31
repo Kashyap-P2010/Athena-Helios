@@ -1,8 +1,10 @@
 package api
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
+	"time"
 )
 
 func (app *Application) ApartmentLogin(w http.ResponseWriter, r *http.Request) {
@@ -157,9 +159,73 @@ func (app *Application) ResidentDashboard(w http.ResponseWriter, r *http.Request
 }
 
 func (app *Application) ResidentLogWastes(w http.ResponseWriter, r *http.Request) {
+	type inputPayloadStruct struct {
+		WasteAmount int    `json:"waste_amount_entered"`
+		Month       string `json:"month_entered"`
+		ResidentID  int    `json:"resident_id"`
+		ApartmentID int    `json:"apartment_id"`
+	}
+	var inputPayload inputPayloadStruct
 
+	app.readJSON(r, &inputPayload)
+	log.Println(inputPayload)
+
+	var id int
+	queryAddUpdateWastes := `update wastes set waste_generated=waste_generated+$1 where month=$2 and resident_id=$3 and apartment_id=$4 returning id`
+	row := app.DB.QueryRow(queryAddUpdateWastes, inputPayload.WasteAmount, inputPayload.Month, inputPayload.ResidentID, inputPayload.ApartmentID)
+
+	err := row.Scan(&id)
+	if err != nil && err == sql.ErrNoRows {
+		queryAddWasteLog := `insert into wastes(waste_generated, month, resident_id, apartment_id, created_at, updated_at) values($1, $2, $3, $4, $5, $6)`
+		_, err := app.DB.Exec(queryAddWasteLog, inputPayload.WasteAmount, inputPayload.Month, inputPayload.ResidentID,
+			inputPayload.ApartmentID, time.Now(), time.Now())
+
+		if err != nil {
+			app.errorJSON(w, err, http.StatusBadRequest)
+			return
+		}
+
+		var payload = struct {
+			Message string `json:"success_message"`
+		}{
+			Message: "Waste Log updated",
+		}
+		app.writeJSON(w, http.StatusOK, payload)
+	} else if err != nil && err != sql.ErrNoRows {
+		app.errorJSON(w, err, http.StatusBadRequest)
+		return
+	} else {
+		var payload = struct {
+			Message string `json:"success_message"`
+		}{
+			Message: "Waste Log updated",
+		}
+		app.writeJSON(w, http.StatusOK, payload)
+	}
 }
 
 func (app *Application) ApartmentDashboard(w http.ResponseWriter, r *http.Request) {
+	type inputPayloadStruct struct {
+		ID    int    `json:"id"`
+		Month string `json:"month"`
+	}
+	var inputPayload inputPayloadStruct
 
+	app.readJSON(r, &inputPayload)
+	log.Println(inputPayload)
+
+	wasteMonthAmount, err := app.GetMonthlyWastesApartment(w, inputPayload.ID, inputPayload.Month)
+	if err != nil {
+		log.Println(err)
+		app.errorJSON(w, err, http.StatusBadRequest)
+		return
+	}
+
+	var payload = struct {
+		Wastes []ApartmentWastes `json:"wastes"`
+	}{
+		Wastes: wasteMonthAmount,
+	}
+
+	app.writeJSON(w, http.StatusOK, payload)
 }

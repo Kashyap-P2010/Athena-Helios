@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"log"
+	"net/http"
 	"time"
 )
 
@@ -122,4 +123,36 @@ func (app *Application) LoginResident(r ResidentAuthInput) (Resident, error) {
 	}
 
 	return residentUser, nil
+}
+
+func (app *Application) GetMonthlyWastesApartment(w http.ResponseWriter, id int, month string) ([]ApartmentWastes, error) {
+	queryGetWastes := `select resident_id, waste_generated from wastes where apartment_id=$1 and month=$2`
+	rows, err := app.DB.Query(queryGetWastes, id, month)
+	if err != nil {
+		app.errorJSON(w, err, http.StatusBadRequest)
+		return []ApartmentWastes{}, err
+	}
+
+	var wastePerMonthList []ApartmentWastes
+
+	for rows.Next() {
+		var residentID string
+		var wasteGenerated int
+
+		_ = rows.Scan(&residentID, &wasteGenerated)
+
+		var flatNumber string
+		queryGetFlatNumber := `select flat_number from residents where id=$1`
+		row := app.DB.QueryRow(queryGetFlatNumber, residentID)
+		_ = row.Scan(&flatNumber)
+
+		wastePerMonthList = append(wastePerMonthList, ApartmentWastes{
+			ID:          id,
+			FlatNumber:  flatNumber,
+			WasteAmount: wasteGenerated,
+			Month:       month,
+		})
+	}
+
+	return wastePerMonthList, nil
 }
